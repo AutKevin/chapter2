@@ -1,8 +1,6 @@
-package com.smart4j.chapter2.service;/**
- * Created by Administrator on 2018/8/13.
- */
+package com.smart4j.chapter2.service;
 
-import com.smart4j.chapter.util.PropsUtil;
+import com.smart4j.chapter.util.DBHelper;
 import com.smart4j.chapter2.model.Customer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +9,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * @program: chapter2->CustomerService
@@ -22,33 +19,6 @@ import java.util.Properties;
 public class CustomerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CustomerService.class);
-
-    private static final String DRIVER;
-    private static final String URL;
-    private static final String USERNAME;
-    private static final String PASSWORD;
-
-    /**
-     * 静态代码块在类加载时运行
-     */
-    static{
-        Properties conf = PropsUtil.loadProps("config.properties");
-        DRIVER = conf.getProperty("jdbc.driver");
-        URL = conf.getProperty("jdbc.url");
-        USERNAME = conf.getProperty("jdbc.username");
-        PASSWORD = conf.getProperty("jdbc.password");
-
-        try {
-            Class.forName(DRIVER);
-        } catch (ClassNotFoundException e) {
-            //e.printStackTrace();
-            LOGGER.error("can not load jdbc driver",e);
-        }
-    }
-
-    public static void main(String[] args) {
-        new CustomerService().getCustomerList("");
-    }
 
     /** 
     * @Description: 获取客户列表
@@ -62,7 +32,7 @@ public class CustomerService {
         try {
             List<Customer> customerList = new ArrayList<Customer>();
             String sql = "select * from customer";
-            conn = DriverManager.getConnection(URL,USERNAME,PASSWORD);
+            conn = DBHelper.getConnection();
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()){
@@ -80,13 +50,7 @@ public class CustomerService {
             //e.printStackTrace();
             LOGGER.error("execute sql failure",e);
         }finally {
-            if (conn!=null){
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    LOGGER.error("close connection failure",e);
-                }
-            }
+            DBHelper.closeConnection(conn);
         }
         return null;
     }
