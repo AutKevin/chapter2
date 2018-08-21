@@ -23,17 +23,21 @@ public class PropsUtil {
      * @return
      */
     public static Properties loadProps(String fileName){
-        Properties props = null;
+        Properties props = new Properties();   //一定要初始化
         InputStream is = null;
         try {
             //将资源文件加载为流
             is = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
+            //is = PropsUtil.class.getClassLoader().getResourceAsStream(fileName);
+            props.load(is);
             if(is==null){
                throw new FileNotFoundException(fileName+"file is not Found");
             }
         } catch (FileNotFoundException e) {
             LOGGER.error("load properties file filure",e);
-        }finally {
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
             if(is !=null){
                 try {
                     is.close();
@@ -120,7 +124,21 @@ public class PropsUtil {
         return value;
     }
 
-    public static void main(String[] args) {
-        LOGGER.error("text");
+    public static void main(String[] args) throws IOException {
+        /*获取文件路径*/
+        String path = PropsUtil.class.getClassLoader().getResource("config.properties").getPath();
+        System.out.println(path);
+        /*手动加载properties文件*/
+        /*InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+        Properties properties = new Properties();
+        properties.load(is);
+        String val = getString(properties,"jdbc.driver");
+        System.out.println(val);*/
+        /*测试工具类加载properties文件*/
+        Properties properties = loadProps("config.properties");
+        String val = getString(properties,"jdbc.driver");
+        System.out.println(val);
+        /*测试日志*/
+        //LOGGER.error("text");
     }
 }

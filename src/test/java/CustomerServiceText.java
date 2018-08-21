@@ -32,6 +32,7 @@ public class CustomerServiceText {
 
    @Test
    public void getCustomerListText(){
+
        List<Customer> customerList =customerService.getCustomerList("");
        Assert.assertEquals(2,customerList.size());
    }
