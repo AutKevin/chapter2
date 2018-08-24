@@ -236,7 +236,7 @@ public class DBHelper {
      * @return
      */
     private static String getTableName(Class<?> entityClass){
-        return entityClass.getSimpleName();
+        return entityClass.getSimpleName().toLowerCase();
     }
 
     public static void main(String[] args) {
