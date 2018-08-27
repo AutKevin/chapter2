@@ -1,5 +1,6 @@
 package com.smart4j.chapter.util;
 
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
@@ -7,6 +8,10 @@ import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -27,6 +32,11 @@ public class DBHelper {
     private static final String USERNAME;
     private static final String PASSWORD;
 
+    //Apache commons DbUtils
+    private static final QueryRunner QUERY_RUNNER = new QueryRunner();
+    /*数据库连接池*/
+    private static final ThreadLocal<Connection> CONNECTION_HOLDER;
+    private static final BasicDataSource DATA_SOURCE;
     /**
      * 静态代码块在类加载时运行
      */
@@ -37,12 +47,20 @@ public class DBHelper {
         USERNAME = conf.getProperty("jdbc.username");
         PASSWORD = conf.getProperty("jdbc.password");
 
-        try {
+        //数据库连接池
+        CONNECTION_HOLDER = new ThreadLocal<Connection>();
+        DATA_SOURCE = new BasicDataSource();
+        DATA_SOURCE.setDriverClassName(DRIVER);
+        DATA_SOURCE.setUrl(URL);
+        DATA_SOURCE.setUsername(USERNAME);
+        DATA_SOURCE.setPassword(PASSWORD);
+        /*使用连接池就不需要jdbc加载驱动了*/
+        /*try {
             Class.forName(DRIVER);
         } catch (ClassNotFoundException e) {
             //e.printStackTrace();
             LOGGER.error("can not load jdbc driver",e);
-        }
+        }*/
     }
 
     /**
@@ -51,20 +69,31 @@ public class DBHelper {
      */
     public static Connection getConnection(){
         Connection conn = null;
-        try {
-            conn = DriverManager.getConnection(URL,USERNAME,PASSWORD);
-        } catch (SQLException e) {
-            e.printStackTrace();  //在catlina.out中打印
-            LOGGER.error("get connection failure",e);
+        conn = CONNECTION_HOLDER.get();
+
+        if (conn==null){  //当从连接池中获取的connection为null时新建一个Connection
+            try {
+                /*JDBC获取连接*/
+                //conn = DriverManager.getConnection(URL,USERNAME,PASSWORD);
+                /*数据库连接池获取连接*/
+                    conn = DATA_SOURCE.getConnection();
+            } catch (SQLException e) {
+                e.printStackTrace();  //在catlina.out中打印
+                LOGGER.error("get connection failure",e);
+            } finally {
+                /*数据库连接池，新建的情况要把新建的connection放入到池中*/
+                CONNECTION_HOLDER.set(conn);
+            }
         }
         return conn;
     }
 
     /**
      * 关闭数据库连接
+     * 如果用数据库连接池，要注释此处
      * @param conn
      */
-    public static void closeConnection(Connection conn){
+/*    public static void closeConnection(Connection conn){
         if (conn!=null){
             try {
                 conn.close();
@@ -73,9 +102,8 @@ public class DBHelper {
                 LOGGER.error("close connection failure",e);
             }
         }
-    }
+    }*/
 
-    private static final QueryRunner QUERY_RUNNER = new QueryRunner();
 
     /**
      * 查询实体列表
@@ -95,7 +123,8 @@ public class DBHelper {
             LOGGER.error("query entity list failure",e);
             throw new RuntimeException(e);
         } finally {
-            closeConnection(conn);
+            //连接池不需要关闭conn
+            /*closeConnection(conn);*/
         }
         return entityList;
     }
@@ -118,7 +147,8 @@ public class DBHelper {
             LOGGER.error("query entity failure",e);
             throw new RuntimeException(e);
         } finally {
-            closeConnection(conn);
+            //连接池不需要关闭conn
+            /*closeConnection(conn);*/
         }
         return entity;
     }
@@ -158,7 +188,8 @@ public class DBHelper {
             LOGGER.error("execute update failure",e);
             throw new RuntimeException(e);
         } finally {
-            closeConnection(conn);
+            //连接池不需要关闭conn
+            /*closeConnection(conn);*/
         }
         return rows;
     }
@@ -239,7 +270,29 @@ public class DBHelper {
         return entityClass.getSimpleName().toLowerCase();
     }
 
+    /**
+     * 逐行执行sql文件
+     * @param filePath
+     */
+    public static void executeSqlFile(String filePath){
+        //获取sql文件的InputStream流
+        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath);
+        //将InputStream流转为Reader
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+
+        try {
+            String sql;
+            while ((sql = reader.readLine())!=null){  //逐行读取
+                executeUpdate(sql);  //执行读取出来的一行sql语句
+            }
+        } catch (IOException e) {
+            //e.printStackTrace();
+            LOGGER.error("execute sql file failure",e);
+            throw new RuntimeException(e);
+        }
+    }
+
     public static void main(String[] args) {
-        System.out.println(getTableName(CastUtil.class));
+        System.out.println(getConnection());
     }
 }

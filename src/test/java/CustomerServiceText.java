@@ -2,12 +2,17 @@
  * Created by Administrator on 2018/8/13.
  */
 
+import com.smart4j.chapter.util.DBHelper;
 import com.smart4j.chapter2.model.Customer;
 import com.smart4j.chapter2.service.CustomerService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,8 +31,8 @@ public class CustomerServiceText {
     }
 
     @Before
-   public void init(){
-        //初始化数据库
+   public void init() throws IOException {
+        DBHelper.executeSqlFile("sql/customer_init.sql");
    }
 
    @Test
@@ -38,7 +43,7 @@ public class CustomerServiceText {
    }
    @Test
    public void getCustomerTest(){
-       long id =1;
+       long id =5;
        Customer customer = customerService.getCustomer(id);
        Assert.assertNotNull(customer);
    }
@@ -54,7 +59,7 @@ public class CustomerServiceText {
 
    @Test
    public void updateCustomerTest(){
-       long id =1;
+       long id =5;
        Map<String,Object> fieldMap = new HashMap<String,Object>();
        fieldMap.put("contact","Aeolian");
        boolean result = customerService.updateCustomer(id,fieldMap);
@@ -63,7 +68,7 @@ public class CustomerServiceText {
 
    @Test
    public void deleteCustomer(){
-       long id =1;
+       long id =5;
        boolean result = customerService.deleteCustomer(id);
        Assert.assertTrue(result);
    }
