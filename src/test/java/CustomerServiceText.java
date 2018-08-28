@@ -37,13 +37,12 @@ public class CustomerServiceText {
 
    @Test
    public void getCustomerListText(){
-
        List<Customer> customerList =customerService.getCustomerList("");
        Assert.assertEquals(2,customerList.size());
    }
    @Test
    public void getCustomerTest(){
-       long id =5;
+       long id =1;
        Customer customer = customerService.getCustomer(id);
        Assert.assertNotNull(customer);
    }
@@ -59,7 +58,7 @@ public class CustomerServiceText {
 
    @Test
    public void updateCustomerTest(){
-       long id =5;
+       long id =1;
        Map<String,Object> fieldMap = new HashMap<String,Object>();
        fieldMap.put("contact","Aeolian");
        boolean result = customerService.updateCustomer(id,fieldMap);
@@ -68,7 +67,7 @@ public class CustomerServiceText {
 
    @Test
    public void deleteCustomer(){
-       long id =5;
+       long id =1;
        boolean result = customerService.deleteCustomer(id);
        Assert.assertTrue(result);
    }
